@@ -6,7 +6,7 @@
 
 global:
   disableall: false # 是否禁用所有插件
-  loglevel: info # 日志级别，可选值：debug,info,warn,error,panic,fatal
+  loglevel: debug # 日志级别，可选值：debug,info,warn,error,panic,fatal
   publish:
     delayclosetimeout: 10s # 自动关闭触发后延迟的时间(期间内如果有新的订阅则取消触发关闭)，0为关闭该功能，保持连接。
   http:
