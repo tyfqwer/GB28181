@@ -1,0 +1,64 @@
+# 支持零配置启动，即无需填写配置默认启用所有的插件。
+# 只需要填写需要修改的配置项即可。不需要将所有的配置都填写进来！！。
+# 全局配置参考 https://m7s.live/guide/config.html
+# 插件配置参考各个插件的文档
+# 插件都有一个enable配置，如果为false则不启用该插件，默认为true即不需要配置。
+
+global:
+  disableall: false # 是否禁用所有插件
+  loglevel: info # 日志级别，可选值：debug,info,warn,error,panic,fatal
+  publish:
+    delayclosetimeout: 10s # 自动关闭触发后延迟的时间(期间内如果有新的订阅则取消触发关闭)，0为关闭该功能，保持连接。
+  http:
+    listenaddr: :6083 # 网关地址，用于访问API
+rtsp:
+    enable: true
+    publish: # 参考全局配置格式
+    subscribe: # 参考全局配置格式
+    pull:
+        repull: -1 # 重试的次数，如果设置为-1则为无限重试，0则是不重试
+    push: 
+        repush: 10
+    listenaddr: :554
+jessica:
+    enable: true
+    http:
+      listenaddr: :6083 # 网关地址，用于访问API
+logrotate:
+    enable: true
+gb28181:
+  enable: true
+  invitemode: 2 #0、手动invite 1、表示自动发起invite，当Server（SIP）接收到设备信息时，立即向设备发送invite命令获取流,2、按需拉流，既等待订阅者触发
+  sipip: "" #sip服务器地址 默认 自动适配设备网段
+  serial: "34020000002000000001"
+  realm: "3402000000"
+  port:
+    sip: udp:5060 #sip服务器端口
+rtmp:
+    enable: false
+hdl:
+    enable: false
+hls:
+    enable: false
+webrtc:
+    enable: false
+webtransport:
+    enable: false
+record:
+    enable: false
+room:
+    enable: false
+snap:
+    enable: false
+monitor:
+    enable: false
+preview:
+    enable: false
+debug:
+    enable: false
+hook:
+    enable: false
+llhls:
+    enable: false
+fmp4:
+    enable: false
