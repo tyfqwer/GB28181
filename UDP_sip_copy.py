@@ -446,10 +446,9 @@ def sb_dat(s, addr_interface):
         # time.sleep(1)
 
 if __name__ == '__main__':
-    with open('config.txt', 'r') as df:
-        str2 = df.read()
-        local_ip = str2[str2.find('ip=') + 3:str2.find('\n')]
-        local_port = str2[str2.find('port=') + 5:str2.find('\n', str2.find('port='))]
+
+    local_ip = "192.168.1.120"
+    local_port = "5061"
     sip_udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sip_udp.bind((local_ip, int(local_port)))
     sema = threading.Semaphore(value=1)
