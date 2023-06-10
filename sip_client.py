@@ -4,12 +4,13 @@ import time
 import hashlib
 from utils import generate_random_string
 from sip_common import SIPMessage
+import xml.etree.ElementTree as ET
 
 # 定义源IP地址和端口
-src_ip = '192.168.1.120'
+src_ip = '192.168.1.14'
 src_port = 15060
 
-host = '192.168.1.120'  # 服务端ip
+host = '192.168.1.14'  # 服务端ip
 port = 5060  # 服务端ip端口
 
 device_id = '34020000001320000001'
@@ -84,20 +85,23 @@ def register_auth(s, msg):
 
 # 设备状态信息报送 心跳监测
 def heartbeat_monitor(s):
+    global n
     while True:
-        body = '<?xml version="1.0" encoding="UTF-8"?>\r\n'
-        body += '<Notify>\r\n'
-        body += '<CmdType>Keepalive</CmdType>\r\n'
-        body += '<SN>43</SN>\r\n'
-        body += '<DeviceID>{}</DeviceID>\r\n'.format(device_id)
-        body += '<Status>OK</Status>\r\n'
-        body += '</Notify>\r\n\r\n'
+        n = n + 1
+        body = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        body += '<Notify>\n'
+        body += '<CmdType>Keepalive</CmdType>\n'
+        body += '<SN>{}</SN>\n'.format(n)
+        body += '<DeviceID>{}</DeviceID>\n'.format(device_id)
+        body += '<Status>OK</Status>\n'
+        body += '<Info></Info>\n'
+        body += '</Notify>\n'
         str_send = 'MESSAGE sip:34020000002000000001@3402000000 SIP/2.0\r\n'
         str_send += 'Via: SIP/2.0/UDP {}:{};rport;branch=z9hG4bK{}\r\n'.format(src_ip, src_port, generate_random_string(9))
         str_send += 'From: <sip:{}@3402000000>;tag=1{}\r\n'.format(device_id, generate_random_string(9))
         str_send += 'To: <sip:{}@3402000000>\r\n'.format(device_id)
         str_send += 'Call-ID: 1{}\r\n'.format(generate_random_string(9))
-        str_send += 'CSeq: 2 MESSAGE\r\n'
+        str_send += 'CSeq: {} MESSAGE\r\n'.format(n)
         str_send += 'Contact: <sip:{}@{}:{}>\r\n'.format(device_id, src_ip, src_port)
         str_send += 'Content-Type: Application/MANSCDP+xml\r\n'
         str_send += 'Max-Forwards: 70\r\n'
@@ -127,7 +131,7 @@ def message(s):
     body = '<?xml version="1.0"?><Query>\n'
     body += '<CmdType>Catalog</CmdType>\n'
     body += '<SN>1</SN>\n'
-    body += '<DeviceID>34020000001320000001</DeviceID>\n'
+    body += '<DeviceID>{}</DeviceID>\n'.format(device_id)
     body += '</Query>\n\n'
 
     str_send += body
@@ -135,6 +139,112 @@ def message(s):
     b4 = str_send.encode()
     s.sendto(b4, (host, port))
 
+
+def message_ack(s, msg):
+    str_send = 'SIP/2.0 200 OK\r\n'
+    str_send += 'Via: {}\r\n'.format(msg.header_dict['Via'])
+    str_send += 'From: <sip:{}@3402000000>;tag={}\r\n'.format(device_id, generate_random_string(9))
+    str_send += 'To: {}\r\n'.format(msg.header_dict['To'])
+    str_send += 'Call-ID: {}\r\n'.format(msg.header_dict['Call-ID'])
+    str_send += 'CSeq: {}\r\n'.format(msg.header_dict['CSeq'])
+    str_send += 'User-Agent: IP Camera\r\n'
+    str_send += 'Content-Length: 0\r\n\r\n'
+    print(str_send)
+    b4 = str_send.encode()
+    s.sendto(b4, (host, port))
+
+
+# 发送设备目录信息
+def send_device_catalog(s, msg):
+    body = '<?xml version="1.0" encoding="GB2312"?>\n'
+    body += '<Response>\n'
+    body += '<CmdType>Catalog</CmdType>\n'
+    body += '<SN>1</SN>\n'
+    body += '<DeviceID>{}</DeviceID>\n'.format(device_id)
+    body += '<SumNum>1</SumNum>\n'
+    body += '<DeviceList Num="1">\n'
+    body += '<Item>\n'
+    body += '<DeviceID>340001</DeviceID>\n'
+    body += '<Name>IPdome</Name>\n'
+    body += '<Manufacturer>Hikvision</Manufacturer>\n'
+    body += '<Model>IP Camera</Model>\n'
+    body += '<Owner>Owner</Owner>\n'
+    body += '<CivilCode>3402000000</CivilCode>\n'
+    body += '<Address>Address</Address>\n'
+    body += '<Parental>0</Parental>\n'
+    body += '<ParentID>34020000002000000001</ParentID>\n'
+    body += '<SafetyWay>0</SafetyWay>\n'
+    body += '<RegisterWay>1</RegisterWay>\n'
+    body += '<Secrecy>0</Secrecy>\n'
+    body += '<Status>ON</Status>\n'
+    body += '</Item>\n'
+    body += '</DeviceList>\n'
+    body += '</Response>\n'
+    str_send = 'MESSAGE sip:34020000002000000001@3402000000 SIP/2.0\r\n'
+    str_send += 'Via: SIP/2.0/UDP {}:{};rport;branch=z9hG4bK{}\r\n'.format(src_ip, src_port, generate_random_string(9))
+    str_send += 'From: <sip:{}@3402000000>;tag=1{}\r\n'.format(device_id, generate_random_string(9))
+    str_send += 'To: <sip:{}@3402000000>\r\n'.format(device_id)
+    str_send += 'Call-ID: 1{}\r\n'.format(generate_random_string(9))
+    str_send += 'CSeq: 2 MESSAGE\r\n'
+    str_send += 'Contact: <sip:{}@{}:{}>\r\n'.format(device_id, src_ip, src_port)
+    str_send += 'Content-Type: Application/MANSCDP+xml\r\n'
+    str_send += 'Max-Forwards: 70\r\n'
+    str_send += 'User-Agent: IP Camera\r\n'
+    str_send += 'Content-Length: {}\r\n\r\n'.format(len(body))
+    str_send += body
+    print(str_send)
+    b4 = str_send.encode()
+    s.sendto(b4, (host, port))
+
+
+# 发送设备信息
+def send_device_info(s, msg):
+    body = '<?xml version="1.0" encoding="GB2312"?>\n'
+    body += '<Response>\n'
+    body += '<CmdType>DeviceInfo</CmdType>\n'
+    body += '<SN>1</SN>\n'
+    body += '<DeviceID>34020000001320000001</DeviceID>\n'
+    body += '<Result>OK</Result>\n'
+    body += '<DeviceName>IP DOME</DeviceName>\n'
+    body += '<Manufacturer>Hikvision</Manufacturer>\n\n'
+    body += '<Model>DS-2DC4423IW-DE</Model>\n'
+    body += '<Firmware>V5.7.1</Firmware>\n'
+    body += '<Channel>1</Channel>\n'
+    body += '</Response>\n'
+    str_send = 'MESSAGE sip:34020000002000000001@3402000000 SIP/2.0\r\n'
+    str_send += 'Via: SIP/2.0/UDP {}:{};rport;branch=z9hG4bK{}\r\n'.format(src_ip, src_port, generate_random_string(9))
+    str_send += 'From: <sip:{}@3402000000>;tag=1{}\r\n'.format(device_id, generate_random_string(9))
+    str_send += 'To: <sip:{}@3402000000>\r\n'.format(device_id)
+    str_send += 'Call-ID: 1{}\r\n'.format(generate_random_string(9))
+    str_send += 'CSeq: 2 MESSAGE\r\n'
+    str_send += 'Contact: <sip:{}@{}:{}>\r\n'.format(device_id, src_ip, src_port)
+    str_send += 'Content-Type: Application/MANSCDP+xml\r\n'
+    str_send += 'Max-Forwards: 70\r\n'
+    str_send += 'User-Agent: IP Camera\r\n'
+    str_send += 'Content-Length: {}\r\n\r\n'.format(len(body))
+    str_send += body
+    print(str_send)
+    b4 = str_send.encode()
+    s.sendto(b4, (host, port))
+
+
+def handle_message_xml(s, msg):
+    xml_str = msg.body
+    root = ET.fromstring(xml_str)
+    cmd_type = root.find('CmdType').text.strip()
+    device_no = root.find('DeviceID').text.strip()
+    if cmd_type == 'Catalog':
+        # 回复确认消息
+        message_ack(s, msg)
+        # 发送设备目录
+        send_device_catalog(s, msg)
+    elif cmd_type == 'DeviceInfo':
+        # 回复确认消息
+        message_ack(s, msg)
+        # 发送设备信息
+        send_device_info(s, msg)
+    else:
+        print("不支持的CmdType：{}".format(cmd_type))
 
 def monitor_messages(s):
     while True:
@@ -160,6 +270,9 @@ def monitor_messages(s):
         elif msg_type == 'MESSAGE':
             if sip_msg.first_line.find('200 OK') != -1:
                 print('MESSAGE 200 OK')
+                return
+            if sip_msg.header_dict['Content-Type'] == 'Application/MANSCDP+xml':
+                handle_message_xml(s, sip_msg)
         else:
             print("不支持的类型：{}".format(msg_type))
 

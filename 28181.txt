@@ -23,3 +23,52 @@ Allow: INVITE, ACK, CANCEL, REGISTER, MESSAGE, NOTIFY, BYE
 User-Agent: GoSIP
 
 
+Message Body
+    <?xml version="1.0" encoding="GB2312"?>\n
+    <Response>\n
+    <CmdType>Catalog</CmdType>\n
+    <SN>1</SN>\n
+    <DeviceID>34020000001320000001</DeviceID>\n
+    <SumNum>1</SumNum>\n
+    <DeviceList Num="1">\n
+    <Item>\n
+    <DeviceID>34020000001320000001</DeviceID>\n
+    <Name>IPdome</Name>\n
+    <Manufacturer>Hikvision</Manufacturer>\n
+    <Model>IP Camera</Model>\n
+    <Owner>Owner</Owner>\n
+    <CivilCode>3402000000</CivilCode>\n
+    <Address>Address</Address>\n
+    <Parental>0</Parental>\n
+    <ParentID>34020000002000000001</ParentID>\n
+    <SafetyWay>0</SafetyWay>\n
+    <RegisterWay>1</RegisterWay>\n
+    <Secrecy>0</Secrecy>\n
+    <Status>ON</Status>\n
+    </Item>\n
+    </DeviceList>\n
+    </Response>\n
+
+Message Body
+    <?xml version="1.0"?>\n
+    <Query>\n
+    <CmdType>DeviceInfo</CmdType>\n
+    <SN>3</SN>\n
+    <DeviceID>34020000001320000001</DeviceID>\n
+    </Query>\n
+
+Message Body
+    <?xml version="1.0" encoding="GB2312"?>\n
+    <Response>\n
+    <CmdType>DeviceInfo</CmdType>\n
+    <SN>3</SN>\n
+    <DeviceID>34020000001320000001</DeviceID>\n
+    <Result>OK</Result>\n
+    <DeviceName>IP DOME</DeviceName>\n
+    <Manufacturer>Hikvision</Manufacturer>\n
+    <Model>DS-2DC4423IW-DE</Model>\n
+    <Firmware>V5.7.1</Firmware>\n
+    <Channel>1</Channel>\n
+    </Response>\n
+
+
