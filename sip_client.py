@@ -7,10 +7,11 @@ from sip_common import SIPMessage
 import xml.etree.ElementTree as ET
 
 # 定义源IP地址和端口
-src_ip = '192.168.1.14'
+src_ip = '192.168.1.10'
 src_port = 15060
+src_user_agent = 'tao yf'
 
-host = '192.168.1.14'  # 服务端ip
+host = '192.168.1.10'  # 服务端ip
 port = 5060  # 服务端ip端口
 
 device_id = '34020000001320000001'
@@ -206,7 +207,7 @@ def send_device_info(s, msg):
     body += '<DeviceID>34020000001320000001</DeviceID>\n'
     body += '<Result>OK</Result>\n'
     body += '<DeviceName>IP DOME</DeviceName>\n'
-    body += '<Manufacturer>Hikvision</Manufacturer>\n\n'
+    body += '<Manufacturer>Hikvision</Manufacturer>\n'
     body += '<Model>DS-2DC4423IW-DE</Model>\n'
     body += '<Firmware>V5.7.1</Firmware>\n'
     body += '<Channel>1</Channel>\n'
@@ -246,6 +247,43 @@ def handle_message_xml(s, msg):
     else:
         print("不支持的CmdType：{}".format(cmd_type))
 
+
+def ack_subscribe(s, msg, cmd_type, device_no):
+    body = '<?xml version="1.0" encoding="GB2312"?>\n'
+    body += '<Response>\n'
+    body += '<CmdType>{}</CmdType>\n'.format(cmd_type)
+    body += '<SN>1</SN>\n'
+    body += '<DeviceID>{}</DeviceID>\n'.format(device_no)
+    body += '<Result>OK</Result>\n'
+    body += '</Response>\n'
+    str_send = 'SIP/2.0 200 OK\r\n'
+    str_send += 'Via: {}\r\n'.format(msg.header_dict['Via'])
+    str_send += 'From: <sip:{}@3402000000>;tag={}\r\n'.format(device_id, generate_random_string(9))
+    str_send += 'To: {}\r\n'.format(msg.header_dict['To'])
+    str_send += 'Call-ID: {}\r\n'.format(msg.header_dict['Call-ID'])
+    str_send += 'CSeq: {}\r\n'.format(msg.header_dict['CSeq'])
+    str_send += 'Expires: {}\r\n'.format(msg.header_dict['Expires'])
+    str_send += 'User-Agent: {}\r\n'.format(src_user_agent)
+    str_send += 'Content-Length: {}\r\n\r\n'.format(len(body))
+    str_send += body
+    print(str_send)
+    b4 = str_send.encode()
+    s.sendto(b4, (host, port))
+
+
+# 处理消息订阅
+def handle_subscribe_xml(s, msg):
+    xml_str = msg.body
+    root = ET.fromstring(xml_str)
+    cmd_type = root.find('CmdType').text.strip()
+    device_no = root.find('DeviceID').text.strip()
+    # 目录订阅
+    if cmd_type == 'Catalog':
+        # 回复确认消息
+        ack_subscribe(s, msg, cmd_type, device_no)
+        # TODO 目录通知消息
+
+
 def monitor_messages(s):
     while True:
         data, addr = sock.recvfrom(1500)  # 接收数据
@@ -270,9 +308,12 @@ def monitor_messages(s):
         elif msg_type == 'MESSAGE':
             if sip_msg.first_line.find('200 OK') != -1:
                 print('MESSAGE 200 OK')
-                return
+                continue
             if sip_msg.header_dict['Content-Type'] == 'Application/MANSCDP+xml':
                 handle_message_xml(s, sip_msg)
+        elif msg_type == 'SUBSCRIBE':
+            if sip_msg.header_dict['Content-Type'] == 'Application/MANSCDP+xml':
+                handle_subscribe_xml(s, sip_msg)
         else:
             print("不支持的类型：{}".format(msg_type))
 

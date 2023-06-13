@@ -28,7 +28,7 @@ logrotate:
     enable: true
 gb28181:
   enable: true
-  invitemode: 2 #0、手动invite 1、表示自动发起invite，当Server（SIP）接收到设备信息时，立即向设备发送invite命令获取流,2、按需拉流，既等待订阅者触发
+  invitemode: 1 #0、手动invite 1、表示自动发起invite，当Server（SIP）接收到设备信息时，立即向设备发送invite命令获取流,2、按需拉流，既等待订阅者触发
   sipip: "" #sip服务器地址 默认 自动适配设备网段
   serial: "34020000002000000001"
   realm: "3402000000"
